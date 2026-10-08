@@ -1,0 +1,129 @@
+--[[
+  BIMZ BYPASS EDITION
+  Original: HOOK SURIKEN
+  Modified by REDZ SPICY for Bos
+  Credit: Bimz Bypass
+]]
+
+if (gg == nil) then os.exit(); end
+gg.setVisible(false)
+
+local STATE = {
+    NARUTO   = false,
+    SHURIKEN = false
+}
+
+local function patchOn(fromHex, toHex, label)
+    gg.clearResults()
+    gg.setRanges(0x20)
+    gg.searchNumber("h " .. fromHex, gg.TYPE_BYTE)
+    local count = gg.getResultsCount()
+    if count > 0 then
+        gg.getResults(count)
+        gg.editAll("h " .. toHex, gg.TYPE_BYTE)
+        gg.clearResults()
+        gg.toast(label .. " ON")
+        return true
+    else
+        gg.clearResults()
+        gg.toast(label .. " FAILED")
+        return false
+    end
+end
+
+local function patchOff(fromHex, toHex, label)
+    gg.clearResults()
+    gg.setRanges(0x20)
+    gg.searchNumber("h " .. fromHex, gg.TYPE_BYTE)
+    local count = gg.getResultsCount()
+    if count > 0 then
+        gg.getResults(count)
+        gg.editAll("h " .. toHex, gg.TYPE_BYTE)
+        gg.clearResults()
+    end
+    gg.toast(label .. " OFF")
+end
+
+local function narutoOn()
+    if patchOn(
+        "00 00 82 42 00 00 AA 42 1E 00 00 00",
+        "0A D7 A3 3C 0A D7 A3 3C 0A D7 A3 3C",
+        "NARUTO"
+    ) then STATE.NARUTO = true end
+end
+
+local function narutoOff()
+    patchOff(
+        "0A D7 A3 3C 0A D7 A3 3C 0A D7 A3 3C",
+        "00 00 82 42 00 00 AA 42 1E 00 00 00",
+        "NARUTO"
+    )
+    STATE.NARUTO = false
+end
+
+local function shurikenOn()
+    if patchOn(
+        "00 00 00 41 00 00 b0 41 11 00 00 00",
+        "0A D7 23 3C 0A D7 23 3C 0A D7 23 3C",
+        "SHURIKEN"
+    ) then STATE.SHURIKEN = true end
+end
+
+local function shurikenOff()
+    patchOff(
+        "0A D7 23 3C 0A D7 23 3C 0A D7 23 3C",
+        "00 00 00 41 00 00 b0 41 11 00 00 00",
+        "SHURIKEN"
+    )
+    STATE.SHURIKEN = false
+end
+
+local function toggleAll()
+    if STATE.NARUTO and STATE.SHURIKEN then
+        narutoOff()
+        shurikenOff()
+    else
+        if not STATE.NARUTO then narutoOn() end
+        if not STATE.SHURIKEN then shurikenOn() end
+    end
+end
+
+local function showMenu()
+    local markNaruto   = (STATE.NARUTO   and "[ON]")  or "[OFF]"
+    local markShuriken = (STATE.SHURIKEN and "[ON]")  or "[OFF]"
+    local title = "BIMZ BYPASS\n" ..
+                  "─────────────────\n" ..
+                  "NARUTO: " .. markNaruto .. "  SHURIKEN: " .. markShuriken
+
+    local choice = gg.choice({
+        "NARUTO DAMAGE " .. markNaruto,
+        "SHURIKEN DAMAGE " .. markShuriken,
+        "TOGGLE ALL",
+        "EXIT"
+    }, nil, title)
+
+    if choice == nil then return end
+
+    if choice == 1 then
+        if STATE.NARUTO then narutoOff() else narutoOn() end
+    elseif choice == 2 then
+        if STATE.SHURIKEN then shurikenOff() else shurikenOn() end
+    elseif choice == 3 then
+        toggleAll()
+    elseif choice == 4 then
+        if STATE.NARUTO   then narutoOff()   end
+        if STATE.SHURIKEN then shurikenOff() end
+        gg.toast("BYE")
+        os.exit()
+    end
+end
+
+gg.toast("BIMZ BYPASS LOADED")
+
+while true do
+    if gg.isVisible(true) then
+        gg.setVisible(false)
+        showMenu()
+    end
+    gg.sleep(100)
+end
