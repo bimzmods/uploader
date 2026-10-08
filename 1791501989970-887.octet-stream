@@ -1,0 +1,243 @@
+--[[
+  BIMZ BYPASS EDITION
+  Original: HOOK SURIKEN
+  Modified by REDZ SPICY for Bos
+  Credit: Bimz Bypass
+  Fix   : Crash on start / long load
+]]
+
+if (gg == nil) then os.exit(); end
+gg.setVisible(false)
+
+-- Delay awal biar GG siap
+gg.sleep(500)
+
+local STATE = {
+    NARUTO   = false,
+    SHURIKEN = false
+}
+
+-- Wrapper safe (pcall) biar nggak crash
+local function safe(fn, ...)
+    local ok, err = pcall(fn, ...)
+    if not ok then
+        gg.toast("Error: " .. tostring(err))
+        return false
+    end
+    return true
+end
+
+local function patchOn(fromHex, toHex, label)
+    gg.clearResults()
+    gg.sleep(150)
+    gg.setRanges(0x20)
+    gg.sleep(150)
+    gg.searchNumber("h " .. fromHex, gg.TYPE_BYTE)
+    gg.sleep(300)
+
+    local count = gg.getResultsCount()
+    if count > 0 then
+        gg.getResults(count)
+        gg.sleep(200)
+        gg.editAll("h " .. toHex, gg.TYPE_BYTE)
+        gg.sleep(200)
+        gg.clearResults()
+        gg.toast(label .. " ON")
+        return true
+    else
+        gg.clearResults()
+        gg.toast(label .. " FAILED")
+        return false
+    end
+end
+
+local function patchOff(fromHex, toHex, label)
+    gg.clearResults()
+    gg.sleep(150)
+    gg.setRanges(0x20)
+    gg.sleep(150)
+    gg.searchNumber("h " .. fromHex, gg.TYPE_BYTE)
+    gg.sleep(300)
+
+    local count = gg.getResultsCount()
+    if count > 0 then
+        gg.getResults(count)
+        gg.sleep(200)
+        gg.editAll("h " .. toHex, gg.TYPE_BYTE)
+        gg.sleep(200)
+        gg.clearResults()
+    end
+    gg.toast(label .. " OFF")
+end
+
+local function narutoOn()
+    if patchOn(
+        "00 00 82 42 00 00 AA 42 1E 00 00 00",
+        "0A D7 A3 3C 0A D7 A3 3C 0A D7 A3 3C",
+        "NARUTO"
+    ) then STATE.NARUTO = true end
+end
+
+local function narutoOff()
+    patchOff(
+        "0A D7 A3 3C 0A D7 A3 3C 0A D7 A3 3C",
+        "00 00 82 42 00 00 AA 42 1E 00 00 00",
+        "NARUTO"
+    )
+    STATE.NARUTO = false
+end
+
+local function shurikenOn()
+    if patchOn(
+        "00 00 00 41 00 00 b0 41 11 00 00 00",
+        "0A D7 23 3C 0A D7 23 3C 0A D7 23 3C",
+        "SHURIKEN"
+    ) then STATE.SHURIKEN = true end
+end
+
+local function shurikenOff()
+    patchOff(
+        "0A D7 23 3C 0A D7 23 3C 0A D7 23 3C",
+        "00 00 00 41 00 00 b0 41 11 00 00 00",
+        "SHURIKEN"
+    )
+    STATE.SHURIKEN = false
+end
+
+-- ============================================
+--  ANTENA HEAD — FIX CRASH
+--  Dipecah per-step + sleep + pcall
+-- ============================================
+local function antenaHead()
+    gg.toast("Antena Head: step 1/3")
+    gg.sleep(300)
+
+    -- STEP 1: 0.901 ~ 0.903
+    safe(function()
+        gg.clearResults()
+        gg.sleep(200)
+        gg.setRanges(gg.REGION_ANONYMOUS)
+        gg.sleep(200)
+        gg.searchNumber(" 0.901~0.903", gg.TYPE_FLOAT, false, gg.SIGN_EQUAL, 0, -1)
+        gg.sleep(400)
+        gg.searchNumber("0.901~0.903", gg.TYPE_FLOAT, false, gg.SIGN_EQUAL, 0, -1)
+        gg.sleep(400)
+
+        local c = gg.getResultsCount()
+        if c > 0 and c < 50000 then
+            gg.getResults(math.min(c, 10000))
+            gg.sleep(300)
+            gg.editAll("300", gg.TYPE_FLOAT, false, 536870912, 0, -1)
+            gg.sleep(300)
+        end
+        gg.clearResults()
+        gg.sleep(200)
+    end)
+
+    gg.toast("Antena Head: step 2/3")
+    gg.sleep(500)
+
+    -- STEP 2: 0.861 ~ 0.863
+    safe(function()
+        gg.setRanges(gg.REGION_ANONYMOUS)
+        gg.sleep(200)
+        gg.searchNumber(" 0.861~0.863", gg.TYPE_FLOAT, false, gg.SIGN_EQUAL, 0, -1)
+        gg.sleep(400)
+        gg.searchNumber("0.861~0.863", gg.TYPE_FLOAT, false, gg.SIGN_EQUAL, 0, -1)
+        gg.sleep(400)
+
+        local c = gg.getResultsCount()
+        if c > 0 and c < 50000 then
+            gg.getResults(math.min(c, 10000))
+            gg.sleep(300)
+            gg.editAll("300", gg.TYPE_FLOAT, false, 536870912, 0, -1)
+            gg.sleep(300)
+        end
+        gg.clearResults()
+        gg.sleep(200)
+    end)
+
+    gg.toast("Antena Head: step 3/3")
+    gg.sleep(500)
+
+    -- STEP 3: 6D;100;300
+    safe(function()
+        gg.setRanges(gg.REGION_ANONYMOUS)
+        gg.sleep(200)
+        gg.searchNumber("6D;100;300::17", gg.TYPE_FLOAT, false, gg.SIGN_EQUAL, 0, -1)
+        gg.sleep(400)
+        gg.searchNumber("100", gg.TYPE_FLOAT, false, gg.SIGN_EQUAL, 0, -1)
+        gg.sleep(400)
+
+        local c = gg.getResultsCount()
+        if c > 0 and c < 50000 then
+            gg.getResults(math.min(c, 10))
+            gg.sleep(300)
+            gg.editAll("-1", gg.TYPE_FLOAT, false, 536870912, 0, -1)
+            gg.sleep(300)
+        end
+        gg.clearResults()
+        gg.sleep(200)
+    end)
+
+    gg.toast("ANTENA HEAD ON")
+end
+
+local function toggleAll()
+    if STATE.NARUTO and STATE.SHURIKEN then
+        narutoOff()
+        shurikenOff()
+    else
+        if not STATE.NARUTO then narutoOn() end
+        if not STATE.SHURIKEN then shurikenOn() end
+    end
+end
+
+local function showMenu()
+    local markNaruto   = (STATE.NARUTO   and "[ON]")  or "[OFF]"
+    local markShuriken = (STATE.SHURIKEN and "[ON]")  or "[OFF]"
+    local title = "BIMZ BYPASS\n" ..
+                  "─────────────────\n" ..
+                  "NARUTO: " .. markNaruto .. "  SHURIKEN: " .. markShuriken
+
+    local choice = gg.choice({
+        "NARUTO DAMAGE " .. markNaruto,
+        "SHURIKEN DAMAGE " .. markShuriken,
+        "TOGGLE ALL",
+        "ANTENA HEAD",
+        "EXIT"
+    }, nil, title)
+
+    if choice == nil then return end
+
+    if choice == 1 then
+        safe(function() if STATE.NARUTO then narutoOff() else narutoOn() end end)
+    elseif choice == 2 then
+        safe(function() if STATE.SHURIKEN then shurikenOff() else shurikenOn() end end)
+    elseif choice == 3 then
+        safe(toggleAll)
+    elseif choice == 4 then
+        safe(antenaHead)
+    elseif choice == 5 then
+        if STATE.NARUTO   then narutoOff()   end
+        if STATE.SHURIKEN then shurikenOff() end
+        gg.toast("BYE")
+        os.exit()
+    end
+end
+
+-- ============================================
+--  START — delay biar GG stabil
+-- ============================================
+gg.sleep(300)
+gg.toast("BIMZ BYPASS LOADED")
+gg.sleep(300)
+
+while true do
+    if gg.isVisible(true) then
+        gg.setVisible(false)
+        gg.sleep(200)
+        safe(showMenu)
+    end
+    gg.sleep(150)
+end
